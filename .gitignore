@@ -2,3 +2,4 @@
 .idea
 v3tracking.iml
 /Cargo.lock
+configs/config.toml
