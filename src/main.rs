@@ -1,13 +1,10 @@
 mod system;
-use actix_web::{App, HttpServer, HttpRequest, Responder};
-
-async fn default_page(req: HttpRequest) -> impl Responder {
-    let name = req.match_info().get("name").unwrap_or("World");
-    format!("Hello {}!", &name)
-}
+mod controllers;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    use actix_web::{App, HttpServer};
+
     // Данные для работы системы
     let mut system = system::System::inic().unwrap();
     // Адрес прослушивания
@@ -15,9 +12,16 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(||{
         App::new()
-            // Стартовая панель/Главная страница
-            // .configure(controllers::admin::panel::Panel::config_routes)
-            .route("/", actix_web::web::get().to(default_page))
+            // Главная | DESKTOP
+            .configure(controllers::desktop::desktop::config)
+
+            //
+            // media файлы CSS|JS|Images
+            .service(actix_files::Files::new("/media", "media/"))
+            // Фавиконка
+            .route("/favicon.ico", actix_web::web::get().to(controllers::other::favicon))
+            // Страница по умолчанию | 404
+            .default_service( actix_web::web::get().to(controllers::other::page_404) )
         })
         // Количество потоков
         .workers(system.configs.listen.get_workers() )
